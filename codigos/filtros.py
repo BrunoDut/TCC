@@ -5,6 +5,19 @@ import joblib as job
 
 
 
+MAPEAMENTO_ATAQUES = {
+    0 : 'BENIGN',
+    1 : 'Bot',
+    2 : 'Brute-Force',
+    3 : 'DDoS',
+    4 : 'DoS',
+    5 : 'Other',
+    6 : 'Port Scan',
+    7 : 'Web Attack',
+}
+
+
+
     
 MAPEAMENTO_COLUNAS = {
     "Dst Port": "Destination Port",
@@ -126,7 +139,7 @@ def executarCICFlow(arquivoPcap):
     
     arquivo_pcap = rf"{arquivoPcap}"
     
-    pasta_resultados = r"C:\Users\bruno\Documents\TCC\AplicacaoTCC\resultados"
+    pasta_resultados = r"C:\Users\bruno\Documents\TCC\AplicacaoTCC\csv"
 
     comando = [
         script_bat,
@@ -166,7 +179,9 @@ def filter_atributes(arquivo):
     
     df_filter_mult = df[filter_mult] #filtragem do modelo multiclasse
     df_filter_bin = df[filter_bin]
-    return df_filter_mult, df_filter_bin
+    
+    df_SrcDst = df[['Src IP','Dst IP']] 
+    return df_filter_mult, df_filter_bin, df_SrcDst
 
 
 def classification_ML(df_mult, df_bin, model_mult, model_bin):
@@ -176,7 +191,6 @@ def classification_ML(df_mult, df_bin, model_mult, model_bin):
     
     coluna_treino_mult = modelo_mult.feature_names_in_
     coluna_treino_bin = modelo_bin.feature_names_in_
-    
     
     df_mult = df_mult.reindex(columns = coluna_treino_mult, fill_value = 0)
     df_mult = df_mult.replace([np.inf, -np.inf], np.nan)
@@ -192,10 +206,28 @@ def classification_ML(df_mult, df_bin, model_mult, model_bin):
     
     return  predict_mult, predict_bin
 
+def string_binario(predict):
+    return list(map(lambda x:'BENIGN' if x == 0 else 'ATTACK',predict))
+
+def string_mult(predict):
+    return list(map(lambda x:MAPEAMENTO_ATAQUES.get(x,'Desconhecido'),predict))
+    
+
+def save_Classifier(df, predict_mult, predict_bin,nome_arquivo):
+    
+    predict_mult= predict_mult.tolist()
+    predict_bin= predict_bin.tolist()
+    
+    df['isAttack'] = string_binario(predict=predict_bin)
+    df['type_attack'] = string_mult(predict=predict_mult)    
+
+    df.to_csv(rf'C:\Users\bruno\Documents\TCC\AplicacaoTCC\resultados\{nome_arquivo}.csv',index = False)
+    return df
+
 #model1 = r'C:\Users\bruno\Documents\TCC\AplicacaoTCC\model_ML\modelo_RF_cicids_Multi.pkl'
 #model2 = r'C:\Users\bruno\Documents\TCC\AplicacaoTCC\model_ML\modelo_RF_cicids_binario.pkl'
 
-#dataframe_mult, dataframe_bin = filter_atributes(r'C:\Users\bruno\Documents\TCC\AplicacaoTCC\resultados\teste_Features1.pcap_Flow.csv') 
+#dataframe_mult, dataframe_bin = filter_atributes(r'C:\Users\bruno\Documents\TCC\AplicacaoTCC\csv\teste_Features1.pcap_Flow.csv') 
 
 #resultado1, resultado2= classification_ML(df1=dataframe_mult, df2=dataframe_bin , model_mult=model1, model_bin=model2)
 
@@ -206,7 +238,7 @@ def classification_ML(df_mult, df_bin, model_mult, model_bin):
 #print(resultado2)
 
 
-#df = pd.read_csv(r'C:\Users\bruno\Documents\TCC\AplicacaoTCC\resultados\teste_Features1.pcap_Flow.csv')
+#df = pd.read_csv(r'C:\Users\bruno\Documents\TCC\AplicacaoTCC\csv\teste_Features1.pcap_Flow.csv')
 #print(df.columns)
 #cols_originais = df.columns.tolist()
 #df = df.rename(columns=MAPEAMENTO_COLUNAS)
