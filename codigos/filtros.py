@@ -192,8 +192,8 @@ def classification_ML(df_mult, df_bin, model_mult, model_bin):
     
     return  predict_mult, predict_bin
 
-#model1 = r'C:\Users\bruno\Documents\TCC\AplicacaoTCC\Include\model_ML\modelo_RF_cicids_Multi.pkl'
-#model2 = r'C:\Users\bruno\Documents\TCC\AplicacaoTCC\Include\model_ML\modelo_RF_cicids_binario.pkl'
+#model1 = r'C:\Users\bruno\Documents\TCC\AplicacaoTCC\model_ML\modelo_RF_cicids_Multi.pkl'
+#model2 = r'C:\Users\bruno\Documents\TCC\AplicacaoTCC\model_ML\modelo_RF_cicids_binario.pkl'
 
 #dataframe_mult, dataframe_bin = filter_atributes(r'C:\Users\bruno\Documents\TCC\AplicacaoTCC\resultados\teste_Features1.pcap_Flow.csv') 
 

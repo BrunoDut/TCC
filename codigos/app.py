@@ -5,8 +5,8 @@ import Captura as cap
 import filtros
 
 
-model_mult= r'C:\Users\bruno\Documents\TCC\AplicacaoTCC\Include\model_ML\modelo_RF_cicids_Multi.pkl'
-model_bin = r'C:\Users\bruno\Documents\TCC\AplicacaoTCC\Include\model_ML\modelo_RF_cicids_binario.pkl'
+model_mult= r'C:\Users\bruno\Documents\TCC\AplicacaoTCC\model_ML\modelo_RF_cicids_Multi.pkl'
+model_bin = r'C:\Users\bruno\Documents\TCC\AplicacaoTCC\model_ML\modelo_RF_cicids_binario.pkl'
 
 
 def blocos_Pkts(fila):
