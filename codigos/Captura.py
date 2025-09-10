@@ -31,5 +31,5 @@ def Executavel(comando):
 def captura(interface, tempo_min,dia):
         print(f' Capturando o pacote: {dia}')
         arquivo_saida = rf"C:\Users\bruno\Documents\TCC\AplicacaoTCC\pcap\teste_Features_{time_format()}.pcap"
-        comando = f"-i {interface} -a duration:{tempo_min*10} -w {arquivo_saida}"
+        comando = f"-i {interface} -a duration:{tempo_min*60} -w {arquivo_saida}"
         Executavel(comando)
