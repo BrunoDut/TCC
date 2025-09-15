@@ -30,34 +30,49 @@ def blocos_Pkts(minute,fila,alert,stop_event):
     fila.put(None)
     alert.put('ENCERRADO a Captura')
 
-def translate_csv(fila, alert,detection):
+import queue, time
+
+def translate_csv(fila, alert, detection):
     """
     Thread de tradução que processa os pacotes da fila.
     """
     while True:
         try:
-            # Tenta pegar um item da fila sem bloquear indefinidamente
+            # Espera até 1s por um item
             dia = fila.get(timeout=1)
-        except queue.Empty:
 
+            # Se o item for None → sinal de encerramento
+            if dia is None:
+                break  
+
+            # Processamento normal
             arquivoPcap = rf"C:\Users\bruno\Documents\TCC\AplicacaoTCC\pcap\teste_Features_{dia}.pcap"
             filtros.executarCICFlow(arquivoPcap=arquivoPcap)
-            res = ML_classifier(dia = dia, model_mult=model_mult, model_bin=model_bin)
-        
+
+            res = ML_classifier(dia=dia, model_mult=model_mult, model_bin=model_bin)
             res = is_atack(res)
-        
+
             if not res.empty:
                 for index, df in res.iterrows():
-                    detection.put(f'Ip source: {df['Src IP']} Ip Dest: {df['Dst IP']} IsAtack: {df['isAttack']} TypeAtack: {df['type_attack']}')
+                    detection.put(
+                        f"Ip source: {df['Src IP']} "
+                        f"Ip Dest: {df['Dst IP']} "
+                        f"IsAtack: {df['isAttack']} "
+                        f"TypeAtack: {df['type_attack']}"
+                    )
                     time.sleep(1)
-        
-            fila.task_done()
-        
-        
-            alert.put(f'\n### Classificação do bloco de pacotes {dia} realizada ###')
 
-    print('### Processo de tradução finalizado ###')
-    alert.put('ENCERRADO A CLASSIFICAÇÃO \n ###Processo Terminado####')
+            fila.task_done()
+            alert.put(f"\n### Classificação do bloco de pacotes {dia} realizada ###")
+
+        except queue.Empty:
+            # Se a fila está vazia, espera e tenta de novo
+            time.sleep(0.5)
+            continue
+
+    print("### Processo de tradução finalizado ###")
+    alert.put("ENCERRADO A CLASSIFICAÇÃO \n ###Processo Terminado####")
+
 
 def ML_classifier(dia, model_mult, model_bin,):
         arquivo_Csv = rf'C:\Users\bruno\Documents\TCC\AplicacaoTCC\csv\teste_Features_{dia}.pcap_Flow.csv'

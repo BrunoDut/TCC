@@ -18,11 +18,10 @@ pasta_a_Deletar = [
 sg.theme("DarkBlue14")  # Deixa o visual mais moderno
 
 
-tempo = 1
 
 layout = [
     [sg.Text("📡 Monitoramento de Rede", font=("Arial", 18, "bold"), justification="center", expand_x=True)],
-    [sg.Text('Tempo entre as capturas em mimutos'), sg.InputText(key='-Time-')],
+    [sg.Text('Adicione o tempo para captura em mintos (já configurado para 1 minuto)'), sg.InputText(key='-Time-')],
     [sg.Button("▶ Iniciar Capturar", size=(12,2), button_color=("white", "green")),
      sg.Button("🛑 Parar", size=(12,2), button_color=("white", "red")),
      sg.Button("Limpar Documentos",size=(12,2), button_color=("white", "purple"),font=('Arial',10))],
@@ -68,7 +67,12 @@ while True:
 
     elif event == "▶ Iniciar Capturar":
         try:
-            tempo = int(values['-Time-'])
+            res = values['-Time-']
+            if res == '':
+                tempo = 1
+            else:
+                tempo = int(res)
+                
             if (tempo > 0):
                 iniciar()
             else:
@@ -79,6 +83,7 @@ while True:
             sg.popup('desculpe o ocorreu um erro na execução tentar denovo')
     elif event == "🛑 Parar":
         stop_event.set()
+        
 
     elif event == "Limpar Documentos":
         limpa_tela()
