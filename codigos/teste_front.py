@@ -22,6 +22,7 @@ sg.theme("DarkBlue14")  # Deixa o visual mais moderno
 layout = [
     [sg.Text("📡 Monitoramento de Rede", font=("Arial", 18, "bold"), justification="center", expand_x=True)],
     [sg.Text('Adicione o tempo para captura em mintos (já configurado para 1 minuto)'), sg.InputText(key='-Time-')],
+    [sg.Text('Selecione Uma Interface'),sg.Combo(values=['Wi-Fi','Ethernet'],key = "-Interface-",readonly=True)],
     [sg.Button("▶ Iniciar Capturar", size=(12,2), button_color=("white", "green")),
      sg.Button("🛑 Parar", size=(12,2), button_color=("white", "red")),
      sg.Button("Limpar Documentos",size=(12,2), button_color=("white", "purple"),font=('Arial',10))],
@@ -46,7 +47,7 @@ def iniciar():
 
     captura_threads = threading.Thread(
         target=app.blocos_Pkts, 
-        args=(tempo,fila, alert, stop_event), 
+        args=(interface,tempo,fila, alert, stop_event), 
         daemon=True
     )
     traducao_threads = threading.Thread(
@@ -68,12 +69,17 @@ while True:
     elif event == "▶ Iniciar Capturar":
         try:
             res = values['-Time-']
+            interface = values['-Interface-']
             if res == '':
                 tempo = 1
             else:
                 tempo = int(res)
-                
+            if interface == '':
+                interface = 'Wi-Fi'    
+            else:
+                interface
             if (tempo > 0):
+                
                 iniciar()
             else:
                 sg.popup('O tempo tem que ser maior que zero')

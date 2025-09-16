@@ -17,12 +17,12 @@ model_bin = r'C:\Users\bruno\Documents\TCC\AplicacaoTCC\model_ML\modelo_RF_cicid
 
 
 
-def blocos_Pkts(minute,fila,alert,stop_event):
-    alert.put('Start')
+def blocos_Pkts(interface,minute,fila,alert,stop_event):
+    alert.put(f'Start Interface {interface} com o tempo: {minute} minutos')
     while not stop_event.is_set():
         dia = cap.time_format()
         minute = int(minute)
-        cap.captura('Wi-Fi',minute,dia)
+        cap.captura(interface,minute,dia)
         fila.put(dia)
         alert.put(f'\n#### captura do pacote realizada {dia} ####')
 
@@ -38,27 +38,37 @@ def translate_csv(fila, alert, detection):
     """
     while True:
         try:
-            # Espera até 1s por um item
+            # Espera até 1s por um item da fila
             dia = fila.get(timeout=1)
 
             # Se o item for None → sinal de encerramento
             if dia is None:
                 break  
 
-            # Processamento normal
+            # Caminho do arquivo pcap
             arquivoPcap = rf"C:\Users\bruno\Documents\TCC\AplicacaoTCC\pcap\teste_Features_{dia}.pcap"
+
+            # Executa extração de features
             filtros.executarCICFlow(arquivoPcap=arquivoPcap)
 
+            # Classificação ML
             res = ML_classifier(dia=dia, model_mult=model_mult, model_bin=model_bin)
-            res = is_atack(res)
 
-            if not res.empty:
+            # Se não houver pacotes capturados, envia alerta e continua para próximo item
+            if res is None or res.empty:
+                alert.put(f" Nenhum pacote capturado para o bloco {dia}. Execute a captura antes de classificar. ")
+                fila.task_done()
+                continue  # não quebra a thread, pega próximo item
+
+            if res['isAttack'] != "BENIGN" or  res['type_attack'] != "BENIGN":
                 for index, df in res.iterrows():
                     detection.put(
                         f"Ip source: {df['Src IP']} "
-                        f"Ip Dest: {df['Dst IP']} "
+                        f"Ip Dest: {df['Dst IP']} " 
+                        f"Protocol: {df['Protocol']} "
+                        f"Destination Port: {df['Destination Port']} " 
                         f"IsAtack: {df['isAttack']} "
-                        f"TypeAtack: {df['type_attack']}"
+                        f"TypeAtack: {df['type_attack']} "
                     )
                     time.sleep(1)
 
@@ -70,6 +80,12 @@ def translate_csv(fila, alert, detection):
             time.sleep(0.5)
             continue
 
+        except Exception as e:
+            # Captura qualquer outro erro para não quebrar a thread
+            alert.put(f"Erro durante classificação do bloco {dia}: {e}")
+            fila.task_done()
+            continue
+
     print("### Processo de tradução finalizado ###")
     alert.put("ENCERRADO A CLASSIFICAÇÃO \n ###Processo Terminado####")
 
@@ -77,8 +93,11 @@ def translate_csv(fila, alert, detection):
 def ML_classifier(dia, model_mult, model_bin,):
         arquivo_Csv = rf'C:\Users\bruno\Documents\TCC\AplicacaoTCC\csv\teste_Features_{dia}.pcap_Flow.csv'
         df_mult, df_bin, df_src_dst = filtros.filter_atributes(arquivo=arquivo_Csv)
-        predict_mult, predict_bin = filtros.classification_ML(df_mult,df_bin,model_mult,model_bin)
-        return filtros.save_Classifier(df=df_src_dst,predict_mult = predict_mult,predict_bin=predict_bin, nome_arquivo= f'Predict_{cap.time_format()}_')
+        if df_mult.empty or df_bin.empty:
+            return None
+        else:
+            predict_mult, predict_bin = filtros.classification_ML(df_mult,df_bin,model_mult,model_bin)
+            return filtros.save_Classifier(df=df_src_dst,predict_mult = predict_mult,predict_bin=predict_bin, nome_arquivo= f'Predict_{cap.time_format()}_')
         
         
 def is_atack(df):
