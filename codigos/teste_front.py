@@ -21,7 +21,7 @@ sg.theme("DarkBlue14")  # Deixa o visual mais moderno
 
 layout = [
     [sg.Text("📡 Monitoramento de Rede", font=("Arial", 18, "bold"), justification="center", expand_x=True)],
-    [sg.Text('Adicione o tempo para captura em mintos (já configurado para 1 minuto)'), sg.InputText(key='-Time-')],
+    [sg.Text('Adicione o tempo para captura em minutos (já configurado para 1 minuto)'), sg.InputText(key='-Time-')],
     [sg.Text('Selecione Uma Interface'),sg.Combo(values=['Wi-Fi','Ethernet'],key = "-Interface-",readonly=True)],
     [sg.Button("▶ Iniciar Capturar", size=(12,2), button_color=("white", "green")),
      sg.Button("🛑 Parar", size=(12,2), button_color=("white", "red")),

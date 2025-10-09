@@ -60,17 +60,18 @@ def translate_csv(fila, alert, detection):
                 fila.task_done()
                 continue  # não quebra a thread, pega próximo item
 
-            if res['isAttack'] != "BENIGN" or  res['type_attack'] != "BENIGN":
-                for index, df in res.iterrows():
-                    detection.put(
-                        f"Ip source: {df['Src IP']} "
-                        f"Ip Dest: {df['Dst IP']} " 
-                        f"Protocol: {df['Protocol']} "
-                        f"Destination Port: {df['Destination Port']} " 
-                        f"IsAtack: {df['isAttack']} "
-                        f"TypeAtack: {df['type_attack']} "
-                    )
-                    time.sleep(1)
+            ataques = res[(res['isAttack'] != "BENIGN") | (res['type_attack'] != "BENIGN")]
+
+            for index, df in ataques.iterrows():
+                detection.put(
+                f"Ip source: {df['Src IP']} "
+                f"Ip Dest: {df['Dst IP']} " 
+                f"Protocol: {df['Protocol']} "
+                f"Destination Port: {df['Destination Port']} " 
+                f"IsAtack: {df['isAttack']} "
+                f"TypeAtack: {df['type_attack']} "
+            )
+            time.sleep(1)
 
             fila.task_done()
             alert.put(f"\n### Classificação do bloco de pacotes {dia} realizada ###")
